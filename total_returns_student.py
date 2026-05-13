@@ -480,16 +480,15 @@ cumret_returns_table, years_cumret = compute_returns_table(cumret_series, common
 
 # ── helper: write returns summary table below the chart ─────────
 def write_returns_table(ws, start_row, tickers_list, returns_table, years,
-                        chart_colors):
+                        chart_colors, table_title):
     """Writes a styled returns table starting at start_row, column A."""
     n_tickers = len(tickers_list)
-    n_cols    = 2 + n_tickers   # Period | Ticker1 | Ticker2 | ...
+    n_cols    = 2 + n_tickers
 
     # Section header
     ws.merge_cells(start_row=start_row, start_column=1,
                    end_row=start_row,   end_column=n_cols)
-    h = ws.cell(row=start_row, column=1,
-                value="Total Return Summary  (Dividends Reinvested)")
+    h = ws.cell(row=start_row, column=1, value=table_title)
     h.font = Font(name="Calibri", size=11, bold=True, color=WHITE)
     h.fill = fill(STEEL); h.alignment = center()
     ws.row_dimensions[start_row].height = 20
@@ -570,7 +569,7 @@ def _write_return_row(ws, row, label, tickers_list, values, bg, bold):
 # ── helper: write a chart-only sheet with returns table ─────────
 def write_chart_sheet(wb, sheet_title, chart_title, y_axis_title,
                       series_values_dict, all_dates,
-                      returns_table, years):
+                      returns_table, years, table_title):
     """
     Chart-only sheet (no data table visible to the user).
     Data is written to far-right hidden columns used only for the chart reference.
@@ -707,13 +706,15 @@ def write_chart_sheet(wb, sheet_title, chart_title, y_axis_title,
     # ── place chart at row 4 ───────────────────────────────────
     ws.add_chart(chart, "A4")
 
-    # chart height ≈ 18 cm; Excel rows ~0.53 cm each → ~34 rows
-    chart_rows = 34
-    returns_start = 4 + chart_rows + 1   # one blank row gap
+    # chart height = 18 cm; at ~0.47 cm/row (Excel default 15pt row) → ~38 rows
+    # add 4 extra blank rows as buffer to avoid overlap
+    chart_rows    = 42
+    returns_start = 4 + chart_rows
 
     # ── returns table ──────────────────────────────────────────
     write_returns_table(ws, returns_start, tickers_order,
-                        returns_table, years, CHART_COLORS)
+                        returns_table, years, CHART_COLORS,
+                        table_title=table_title)
 
     # ── column A width for the table label column ──────────────
     ws.column_dimensions["A"].width = 18
@@ -732,6 +733,7 @@ write_chart_sheet(
     all_dates     = common_dates,
     returns_table = norm_returns_table,
     years         = years_norm,
+    table_title   = "Price Return Summary  (Excludes Dividends)",
 )
 
 # ── Chart Sheet 2 : Cumulative Total Return ─────────────────────
@@ -744,6 +746,7 @@ write_chart_sheet(
     all_dates     = common_dates,
     returns_table = cumret_returns_table,
     years         = years_cumret,
+    table_title   = "Total Return Summary  (Dividends Reinvested)",
 )
 
 # ── save ────────────────────────────────────────────────────────
